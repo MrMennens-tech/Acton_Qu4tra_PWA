@@ -538,8 +538,9 @@ async function connect() {
   log('Scannen naar Qu4tro (BQ...)...');
   try {
     device = await navigator.bluetooth.requestDevice({
-      // Match on advertised service UUID 0xFFE0 — confirmed in BQ451800617 advertisement
-      filters: [{ services: [SVC] }]
+      // Show all BLE devices — select BQ451800617 manually from the list
+      acceptAllDevices: true,
+      optionalServices: [SVC]
     });
     device.addEventListener('gattserverdisconnected', ()=>{
       clearInterval(hbTimer); showDash(false);
