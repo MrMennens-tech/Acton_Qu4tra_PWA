@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#020617">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<title>Qu4tro Dashboard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@700&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #020617; --surface: #0a1628; --border: #1e293b;
+    --text: #f8fafc; --muted: #64748b; --dim: #334155;
+    --cyan: #22d3ee; --indigo: #818cf8; --green: #22c55e;
+    --amber: #f59e0b; --red: #ef4444; --yellow: #fde68a;
+    --radius: 14px;
+  }
+  html, body { height: 100%; background: var(--bg); color: var(--text);
+    font-family: 'DM Sans', sans-serif; overflow-x: hidden; }
+  body { padding: 20px 16px 32px; max-width: 480px; margin: 0 auto; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  /* Header */
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  .header-label { font-size: 10px; letter-spacing: .2em; color: var(--muted); margin-bottom: 2px; }
+  .header-title { font-size: 20px; font-weight: 600; letter-spacing: -.02em; }
+  .status-pill { display: flex; align-items: center; gap: 7px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 6px 12px; transition: all .3s; }
+  .status-pill.ok { background: #052e16; border-color: #166534; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--dim); transition: all .3s; }
+  .status-pill.ok .status-dot { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .status-label { font-size: 11px; color: var(--muted); transition: color .3s; }
+  .status-pill.ok .status-label { color: #86efac; }
+
+  /* Connect button */
+  .btn-connect { width: 100%; padding: 15px; border-radius: var(--radius);
+    background: linear-gradient(135deg, #0ea5e9, var(--indigo));
+    border: none; color: #fff; font-size: 15px; font-weight: 600;
+    letter-spacing: .02em; cursor: pointer; margin-bottom: 20px;
+    transition: opacity .2s; font-family: inherit; }
+  .btn-connect:disabled { opacity: .55; cursor: not-allowed; }
+
+  /* Card */
+  .card { background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px; margin-bottom: 12px; }
+  .card-label { font-size: 10px; letter-spacing: .15em; color: var(--muted); margin-bottom: 12px; }
+
+  /* Gauges row */
+  .gauges { display: flex; align-items: center; gap: 20px; }
+
+  /* Battery SVG gauge */
+  .battery-wrap { position: relative; width: 120px; height: 120px; flex-shrink: 0; }
+  .battery-wrap svg { transform: rotate(135deg); }
+  .battery-center { position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; }
+  .battery-pct { font-size: 26px; font-weight: 700; line-height: 1; }
+  .battery-unit { font-size: 10px; color: var(--muted); letter-spacing: .1em; margin-top: 2px; }
+
+  /* Speed tape */
+  .speed-wrap { flex: 1; }
+  .speed-val { font-size: 40px; font-weight: 700; line-height: 1; }
+  .speed-unit { font-size: 12px; color: var(--muted); letter-spacing: .08em; }
+  .speed-bar-bg { height: 5px; background: var(--border); border-radius: 3px; margin: 8px 0 4px; overflow: hidden; }
+  .speed-bar { height: 100%; background: linear-gradient(90deg, var(--cyan), var(--indigo));
+    border-radius: 3px; width: 0%; transition: width .3s ease; }
+  .speed-limits { display: flex; justify-content: space-between; font-size: 10px; color: var(--dim); }
+
+  /* Stats grid */
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .stat { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; }
+  .stat-label { font-size: 9px; letter-spacing: .12em; color: var(--muted); margin-bottom: 4px; }
+  .stat-val { font-size: 20px; font-weight: 700; }
+  .stat-unit { font-size: 10px; color: var(--muted); margin-left: 2px; }
+
+  /* Mode selector */
+  .modes { display: flex; gap: 8px; margin-bottom: 10px; }
+  .mode-btn { flex: 1; padding: 10px 0; border-radius: 10px;
+    background: var(--bg); border: 1.5px solid var(--border);
+    color: var(--muted); font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all .2s; font-family: inherit; }
+  .mode-btn.active-0 { background: #052e1622; border-color: var(--green); color: var(--green); }
+  .mode-btn.active-1 { background: #78350f22; border-color: var(--amber); color: var(--amber); }
+  .mode-btn.active-2 { background: #7f1d1d22; border-color: var(--red); color: var(--red); }
+  .mode-btn:disabled { cursor: not-allowed; opacity: .5; }
+  .mode-desc { font-size: 11px; color: var(--muted); min-height: 16px; }
+
+  /* Lights toggle */
+  .lights-row { display: flex; justify-content: space-between; align-items: center; }
+  .lights-info {}
+  .lights-state { font-size: 12px; color: var(--muted); margin-top: 3px; transition: color .3s; }
+  .lights-state.on { color: var(--yellow); }
+  .toggle { width: 52px; height: 28px; border-radius: 14px; border: none;
+    background: var(--border); position: relative; cursor: pointer; transition: background .3s; }
+  .toggle.on { background: #92400e; }
+  .toggle:disabled { cursor: not-allowed; opacity: .5; }
+  .toggle-knob { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px;
+    border-radius: 50%; background: var(--dim); transition: left .3s, background .3s, box-shadow .3s; }
+  .toggle.on .toggle-knob { left: 27px; background: var(--yellow); box-shadow: 0 0 10px #fde68a88; }
+
+  /* Disconnect */
+  .btn-disconnect { width: 100%; padding: 11px; border-radius: 12px;
+    background: transparent; border: 1px solid var(--border); color: var(--muted);
+    font-size: 13px; cursor: pointer; margin-bottom: 12px; font-family: inherit; }
+
+  /* Log */
+  .log-entries { max-height: 140px; overflow-y: auto; }
+  .log-entry { font-size: 10px; color: var(--dim); line-height: 1.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .log-entry.ok { color: #166534; }
+  .log-entry.err { color: #7f1d1d; }
+  .log-empty { font-size: 12px; color: var(--dim); }
+
+  /* Warning banner */
+  .warn { background: #1c1400; border: 1px solid #78350f; border-radius: 10px;
+    padding: 10px 14px; font-size: 11px; color: #fbbf24; margin-bottom: 12px; line-height: 1.5; }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-label">ACTON BLINK</div>
+    <div class="header-title">QU4TRO Dashboard</div>
+  </div>
+  <div class="status-pill" id="statusPill">
+    <div class="status-dot"></div>
+    <span class="status-label" id="statusLabel">Offline</span>
+  </div>
+</div>
+
+<!-- Browser warning -->
+<div class="warn" id="browserWarn" style="display:none">
+  ⚠️ Web Bluetooth vereist Chrome of Edge op Android. Safari en Firefox worden niet ondersteund.
+</div>
+
+<!-- Connect button -->
+<button class="btn-connect" id="btnConnect" onclick="connect()">
+  🔗&nbsp; Verbind via Bluetooth
+</button>
+
+<!-- Dashboard (hidden until connected) -->
+<div id="dashboard" class="hidden">
+
+  <!-- Gauges -->
+  <div class="card">
+    <div class="gauges">
+      <!-- Battery gauge -->
+      <div class="battery-wrap">
+        <svg width="120" height="120" viewBox="0 0 128 128">
+          <circle cx="64" cy="64" r="54" fill="none" stroke="#1e293b" stroke-width="10"
+            stroke-dasharray="254.469 339.292" stroke-linecap="round"/>
+          <circle id="batArc" cx="64" cy="64" r="54" fill="none" stroke="#22d3ee" stroke-width="10"
+            stroke-dasharray="0 339.292" stroke-linecap="round"
+            style="transition:stroke-dasharray .8s ease,stroke .4s"/>
+        </svg>
+        <div class="battery-center">
+          <div class="battery-pct mono" id="batPct" style="color:var(--cyan)">–</div>
+          <div class="battery-unit">ACCU %</div>
+        </div>
+      </div>
+      <!-- Speed -->
+      <div class="speed-wrap">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <span class="speed-val mono" id="spdVal">0.0</span>
+          <span class="speed-unit">KM/H</span>
+        </div>
+        <div class="speed-bar-bg"><div class="speed-bar" id="spdBar"></div></div>
+        <div class="speed-limits"><span>0</span><span id="spdMax">25 km/h</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">SPANNING</div>
+      <div><span class="stat-val mono" id="statVolt" style="color:var(--indigo)">–</span><span class="stat-unit">V</span></div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">TEMPERATUUR</div>
+      <div><span class="stat-val mono" id="statTemp" style="color:var(--indigo)">–</span><span class="stat-unit">°C</span></div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">STROOM</div>
+      <div><span class="stat-val mono" id="statDrain" style="color:var(--indigo)">–</span><span class="stat-unit">mA</span></div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">RESTBEREIK</div>
+      <div><span class="stat-val mono" id="statRange" style="color:var(--indigo)">–</span><span class="stat-unit">km</span></div>
+    </div>
+  </div>
+
+  <!-- Ride mode -->
+  <div class="card">
+    <div class="card-label">RIJMODUS</div>
+    <div class="modes">
+      <button class="mode-btn" id="modeBtn0" onclick="setMode(0)">Beginner</button>
+      <button class="mode-btn" id="modeBtn1" onclick="setMode(1)">Normal</button>
+      <button class="mode-btn" id="modeBtn2" onclick="setMode(2)">Performance</button>
+    </div>
+    <div class="mode-desc" id="modeDesc">–</div>
+  </div>
+
+  <!-- Lights -->
+  <div class="card">
+    <div class="card-label">VERLICHTING</div>
+    <div class="lights-row">
+      <div class="lights-info">
+        <div class="lights-state" id="lightsState">Uit</div>
+      </div>
+      <button class="toggle" id="lightsToggle" onclick="toggleLights()">
+        <div class="toggle-knob"></div>
+      </button>
+    </div>
+  </div>
+
+  <button class="btn-disconnect" onclick="disconnect()">Verbinding verbreken</button>
+</div><!-- /dashboard -->
+
+<!-- Log -->
+<div class="card">
+  <div class="card-label">LOGBOEK</div>
+  <div class="log-entries" id="logEntries">
+    <div class="log-empty">Nog geen activiteit</div>
+  </div>
+</div>
+
+<script>
+// ─── BLE constants ────────────────────────────────────────────────────────────
+const SERVICE_UUID = '0000ffe0-0000-1000-8000-00805f9b34fb';
+const CHAR_UUID    = '0000ffe1-0000-1000-8000-00805f9b34fb';
+
+// ─── Protocol helpers ─────────────────────────────────────────────────────────
+function buildPacket(fields) {
+  // fields = [{key, value}, ...] → "AS | K | V | K | V | AE"
+  let parts = ['AS'];
+  for (const {k, v} of fields) { parts.push(k); parts.push(String(v)); }
+  parts.push('AE');
+  return parts.join(' | ');
+}
+
+function parsePacket(str) {
+  // "AS | K | V | K | V | AE" → {K: V, ...}
+  const parts = str.split(' | ').map(s => s.trim());
+  if (parts[0] !== 'AS' || parts[parts.length-1] !== 'AE') return null;
+  const result = {};
+  for (let i = 1; i < parts.length - 1; i += 2) {
+    if (parts[i+1] !== undefined) result[parts[i]] = parts[i+1];
+  }
+  return result;
+}
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let device = null, char = null;
+let currentMode = 1;       // 0=Beginner 1=Normal 2=Performance
+let lightsOn = false;
+let heartbeatTimer = null;
+let speed = 0, batPct = 0;
+
+const MODES = ['BEGINNER', 'NORMAL', 'PERFORMANCE'];
+const MODE_LABELS = ['Beginner', 'Normal', 'Performance'];
+const MODE_DESCS = [
+  'Max ~15 km/h · Zachte remmen · Veilig voor beginners',
+  'Max ~25 km/h · Standaard rijgedrag',
+  'Volledig vermogen · Scherpe respons'
+];
+const MAX_SPEEDS = [15, 25, 44];
+
+// ─── UI helpers ───────────────────────────────────────────────────────────────
+const enc = new TextEncoder(), dec = new TextDecoder();
+
+function addLog(msg, type = '') {
+  const el = document.getElementById('logEntries');
+  const empty = el.querySelector('.log-empty');
+  if (empty) empty.remove();
+  const now = new Date().toLocaleTimeString('nl-NL');
+  const div = document.createElement('div');
+  div.className = 'log-entry mono' + (type ? ' ' + type : '');
+  div.textContent = `${now} — ${msg}`;
+  el.prepend(div);
+  while (el.children.length > 30) el.lastChild.remove();
+}
+
+function setConnected(yes) {
+  const pill = document.getElementById('statusPill');
+  const label = document.getElementById('statusLabel');
+  const btn = document.getElementById('btnConnect');
+  const dash = document.getElementById('dashboard');
+  if (yes) {
+    pill.classList.add('ok');
+    label.textContent = 'Verbonden';
+    btn.classList.add('hidden');
+    dash.classList.remove('hidden');
+  } else {
+    pill.classList.remove('ok');
+    label.textContent = 'Offline';
+    btn.classList.remove('hidden');
+    dash.classList.add('hidden');
+  }
+}
+
+function updateBattery(pct) {
+  const arc = document.getElementById('batArc');
+  const txt = document.getElementById('batPct');
+  const total = 254.469; // 3/4 of circumference
+  const fill = (pct / 100) * total;
+  const col = pct > 50 ? '#22d3ee' : pct > 20 ? '#f59e0b' : '#ef4444';
+  arc.setAttribute('stroke-dasharray', `${fill} 339.292`);
+  arc.setAttribute('stroke', col);
+  txt.style.color = col;
+  txt.textContent = pct;
+}
+
+function updateSpeed(spd, modeIdx) {
+  const max = MAX_SPEEDS[modeIdx];
+  const pct = Math.min(spd / max * 100, 100);
+  document.getElementById('spdVal').textContent = spd.toFixed(1);
+  document.getElementById('spdBar').style.width = pct + '%';
+  document.getElementById('spdMax').textContent = max + ' km/h';
+}
+
+function updateModeUI(modeIdx) {
+  currentMode = modeIdx;
+  for (let i = 0; i < 3; i++) {
+    const b = document.getElementById('modeBtn' + i);
+    b.className = 'mode-btn' + (i === modeIdx ? ' active-' + i : '');
+  }
+  document.getElementById('modeDesc').textContent = MODE_DESCS[modeIdx];
+  document.getElementById('spdMax').textContent = MAX_SPEEDS[modeIdx] + ' km/h';
+}
+
+function updateLightsUI(on) {
+  lightsOn = on;
+  const t = document.getElementById('lightsToggle');
+  const s = document.getElementById('lightsState');
+  if (on) { t.classList.add('on'); s.className = 'lights-state on'; s.textContent = 'Aan ✦'; }
+  else     { t.classList.remove('on'); s.className = 'lights-state'; s.textContent = 'Uit'; }
+}
+
+// ─── BLE send / receive ───────────────────────────────────────────────────────
+async function send(packet) {
+  if (!char) return;
+  try {
+    await char.writeValue(enc.encode(packet));
+    addLog('TX: ' + packet, 'ok');
+  } catch(e) {
+    addLog('TX fout: ' + e.message, 'err');
+  }
+}
+
+function onNotify(event) {
+  const raw = dec.decode(event.target.value);
+  const fields = parsePacket(raw);
+  if (!fields) { addLog('RX onbekend: ' + raw); return; }
+
+  // Update telemetrie
+  if (fields.B3 !== undefined) {
+    const pct = parseInt(fields.B3);
+    updateBattery(pct);
+    batPct = pct;
+  }
+  if (fields.V !== undefined) {
+    const volts = (parseInt(fields.V) / 1000).toFixed(2);
+    document.getElementById('statVolt').textContent = volts;
+  }
+  if (fields.B1 !== undefined) {
+    document.getElementById('statTemp').textContent = parseInt(fields.B1);
+  }
+  if (fields.B4 !== undefined) {
+    document.getElementById('statDrain').textContent = parseInt(fields.B4);
+  }
+  if (fields.R8 !== undefined) {
+    const km = (parseInt(fields.R8) / 1000).toFixed(1);
+    document.getElementById('statRange').textContent = km;
+  }
+  if (fields.R6 !== undefined) {
+    // RPM → km/h (wheel diam ~200mm, 4 wheels, ~3.14 * 0.2 * rpm / 60 * 3.6)
+    const rpm = parseInt(fields.R6);
+    speed = rpm * 0.0376;
+    updateSpeed(speed, currentMode);
+  }
+  if (fields.B6 !== undefined) {
+    const modeMap = {'0':0, '1':1, '2':2, 'BEGINNER':0, 'NORMAL':1, 'PERFORMANCE':2};
+    const mi = modeMap[fields.B6];
+    if (mi !== undefined) updateModeUI(mi);
+  }
+  if (fields.B7 !== undefined) {
+    updateLightsUI(parseInt(fields.B7) > 0);
+  }
+}
+
+// ─── Commands ─────────────────────────────────────────────────────────────────
+async function setMode(idx) {
+  await send(buildPacket([{k: 'M', v: MODES[idx]}]));
+  updateModeUI(idx);
+}
+
+async function toggleLights() {
+  const next = !lightsOn;
+  const val = next ? 1 : 0;
+  await send(buildPacket([{k: 'B7', v: val}]));
+  updateLightsUI(next);
+}
+
+function startHeartbeat() {
+  heartbeatTimer = setInterval(async () => {
+    await send(buildPacket([{k: 'M', v: 'QUERY'}]));
+  }, 2000);
+}
+
+// ─── BLE connect / disconnect ─────────────────────────────────────────────────
+async function connect() {
+  if (!navigator.bluetooth) {
+    document.getElementById('browserWarn').style.display = '';
+    addLog('Web Bluetooth niet beschikbaar', 'err');
+    return;
+  }
+  const btn = document.getElementById('btnConnect');
+  btn.textContent = 'Verbinden...';
+  btn.disabled = true;
+  addLog('Scannen naar Qu4tro / Blink board...');
+
+  try {
+    device = await navigator.bluetooth.requestDevice({
+      filters: [
+        { namePrefix: 'blink' },
+        { namePrefix: 'BLINK' },
+        { namePrefix: 'Qu4tro' },
+      ],
+      optionalServices: [SERVICE_UUID]
+    });
+
+    device.addEventListener('gattserverdisconnected', () => {
+      clearInterval(heartbeatTimer);
+      setConnected(false);
+      addLog('Verbinding verbroken', 'err');
+      char = null;
+      btn.textContent = '🔗\u00a0 Verbind via Bluetooth';
+      btn.disabled = false;
+    });
+
+    const server  = await device.gatt.connect();
+    const service = await server.getPrimaryService(SERVICE_UUID);
+    char = await service.getCharacteristic(CHAR_UUID);
+
+    await char.startNotifications();
+    char.addEventListener('characteristicvaluechanged', onNotify);
+
+    setConnected(true);
+    addLog(`Verbonden met ${device.name}`, 'ok');
+    updateModeUI(1);
+    updateBattery(0);
+
+    // Query current state
+    await send(buildPacket([{k: 'M', v: 'QUERY'}]));
+    startHeartbeat();
+
+  } catch(e) {
+    addLog('Verbinding mislukt: ' + e.message, 'err');
+    btn.textContent = '🔗\u00a0 Verbind via Bluetooth';
+    btn.disabled = false;
+  }
+}
+
+async function disconnect() {
+  clearInterval(heartbeatTimer);
+  if (device?.gatt?.connected) device.gatt.disconnect();
+  char = null;
+  setConnected(false);
+  addLog('Verbroken');
+}
+
+// ─── Init ────────────────────────────────────────────────────────────────────
+if (!('bluetooth' in navigator)) {
+  document.getElementById('browserWarn').style.display = '';
+}
+updateModeUI(1);
+</script>
+</body>
+</html>
