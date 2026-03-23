@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#080f10">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Qu4tro — Binaire Editie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    --bg: #080f10;
+    --surf1: #0c1a1e;
+    --teal-glow: #23bdd8;
+  }
+  body {
+    background-color: var(--bg);
+    color: white;
+    font-family: 'Figtree', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, .condensed { font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase; }
+  
+  .glass-panel {
+    background: var(--surf1);
+    border: 1px solid rgba(35, 189, 216, 0.2);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  }
+  
+  .btn-primary {
+    background: linear-gradient(135deg, #145668 0%, #0d3540 100%);
+    border: 1px solid var(--teal-glow);
+    transition: all 0.2s;
+  }
+  .btn-primary:active { transform: scale(0.98); background: #0d3540; }
+  .btn-primary:disabled { opacity: 0.5; border-color: #555; pointer-events: none; }
+  
+  #logBox {
+    font-family: monospace;
+    font-size: 0.8rem;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .log-tx { color: #23bdd8; }
+  .log-rx { color: #a8dde6; }
+  .log-err { color: #ff5555; }
+  .log-ok { color: #55ff55; }
+</style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4">
+
+  <!-- Header -->
+  <header class="w-full max-w-md mt-4 mb-6 flex justify-between items-center">
+    <div>
+      <h1 class="text-3xl font-bold tracking-wider text-white">QU4TRO</h1>
+      <p class="text-xs text-gray-400">BINAIRE PROTOCOL TOOL</p>
+    </div>
+    <div id="statusDot" class="w-4 h-4 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)]"></div>
+  </header>
+
+  <!-- Main Connect Button -->
+  <button id="btnConnect" class="btn-primary w-full max-w-md rounded-xl py-4 text-xl font-bold tracking-widest shadow-[0_0_15px_rgba(35,189,216,0.2)] mb-6">
+    VERBIND MET BOARD
+  </button>
+
+  <!-- Dashboard Tools -->
+  <main class="w-full max-w-md flex flex-col gap-4">
+    
+    <!-- Custom Hex Sender -->
+    <div class="glass-panel p-5 rounded-2xl flex flex-col gap-3">
+      <h2 class="text-lg font-bold text-[#23bdd8] condensed tracking-widest">STUUR BINAIR COMMANDO (HEX)</h2>
+      <p class="text-xs text-gray-400 leading-tight">Plak hier de hexadecimale code uit nRF Connect (bijv: 53 53 4D 1E 08 53 45). Spaties of streepjes worden genegeerd.</p>
+      
+      <div class="flex gap-2">
+        <input id="hexInput" type="text" placeholder="53 53 ... 53 45" class="w-full bg-black border border-gray-700 rounded-lg px-3 py-2 text-sm text-[#23bdd8] focus:outline-none focus:border-[#23bdd8] font-mono">
+        <button id="btnSendHex" class="bg-[#1b8fa8] hover:bg-[#23bdd8] text-black font-bold px-4 py-2 rounded-lg transition-colors">ZEND</button>
+      </div>
+      
+      <div class="flex gap-2 mt-2">
+        <button onclick="document.getElementById('hexInput').value='53 53 33 00 53 45'" class="text-xs bg-gray-800 border border-gray-600 px-2 py-1 rounded">Test 1</button>
+        <button onclick="document.getElementById('hexInput').value='53 53 4D 01 53 45'" class="text-xs bg-gray-800 border border-gray-600 px-2 py-1 rounded">Test 2</button>
+      </div>
+    </div>
+
+    <!-- Quick Actions (Placeholders) -->
+    <div class="glass-panel p-5 rounded-2xl">
+      <h2 class="text-lg font-bold text-[#23bdd8] condensed tracking-widest mb-3">SNELLE ACTIES (WERKT PAS MET JUISTE HEX)</h2>
+      <div class="grid grid-cols-2 gap-3">
+        <button onclick="sendQuickCommand('53 53 00 01 53 45')" class="bg-gray-800 py-3 rounded-lg font-semibold text-sm border border-gray-700 hover:border-white transition-colors">LICHT AAN</button>
+        <button onclick="sendQuickCommand('53 53 00 00 53 45')" class="bg-gray-800 py-3 rounded-lg font-semibold text-sm border border-gray-700 hover:border-white transition-colors">LICHT UIT</button>
+      </div>
+    </div>
+
+    <!-- Live Terminal / Log -->
+    <div class="glass-panel p-4 rounded-2xl flex-1 flex flex-col min-h-[300px]">
+      <div class="flex justify-between items-center mb-2">
+        <h2 class="text-lg font-bold text-[#23bdd8] condensed tracking-widest">LIVE DATA LOG</h2>
+        <button onclick="clearLog()" class="text-xs text-gray-400 hover:text-white">Wissen</button>
+      </div>
+      <div id="logBox" class="flex-1 bg-black rounded-lg p-3 overflow-y-auto h-48 border border-gray-800">
+        <span class="text-gray-500">Klaar om te verbinden... Zoek naar BQ451800617 of vergelijkbaar.</span><br>
+      </div>
+    </div>
+
+  </main>
+
+<script>
+  // Bluetooth Configuratie
+  const SVC_UUID = '0000ffe0-0000-1000-8000-00805f9b34fb';
+  const CHAR_UUID = '0000ffe1-0000-1000-8000-00805f9b34fb';
+  
+  let bluetoothDevice = null;
+  let txRxCharacteristic = null;
+
+  const btnConnect = document.getElementById('btnConnect');
+  const logBox = document.getElementById('logBox');
+  const statusDot = document.getElementById('statusDot');
+
+  // --- LOGGING ---
+  function log(msg, type = '') {
+    const el = document.createElement('div');
+    const time = new Date().toLocaleTimeString('nl-NL', { hour12: false, fractionalSecondDigits: 3 }).slice(0,-1);
+    el.textContent = `[${time}] ${msg}`;
+    if (type) el.className = `log-${type}`;
+    logBox.appendChild(el);
+    logBox.scrollTop = logBox.scrollHeight;
+  }
+  function clearLog() { logBox.innerHTML = ''; }
+
+  // --- BLUETOOTH CONNECTIE ---
+  btnConnect.addEventListener('click', async () => {
+    if (bluetoothDevice && bluetoothDevice.gatt.connected) {
+      bluetoothDevice.gatt.disconnect();
+      return;
+    }
+
+    try {
+      log('Vraag permissie en zoek BLE apparaten...', 'ok');
+      
+      // OPLOSSING 1: acceptAllDevices: true negeert de foute naam!
+      bluetoothDevice = await navigator.bluetooth.requestDevice({
+        acceptAllDevices: true,
+        optionalServices: [SVC_UUID]
+      });
+
+      log('Apparaat geselecteerd: ' + (bluetoothDevice.name || 'Onbekend (BQ...)'), 'ok');
+      bluetoothDevice.addEventListener('gattserverdisconnected', onDisconnected);
+
+      log('Verbinden met GATT server...', 'ok');
+      const server = await bluetoothDevice.gatt.connect();
+
+      log('Service ophalen (' + SVC_UUID + ')...', 'ok');
+      const service = await server.getPrimaryService(SVC_UUID);
+
+      log('Karakteristiek ophalen (' + CHAR_UUID + ')...', 'ok');
+      txRxCharacteristic = await service.getCharacteristic(CHAR_UUID);
+
+      // Notificaties aanzetten (lezen van het board)
+      await txRxCharacteristic.startNotifications();
+      txRxCharacteristic.addEventListener('characteristicvaluechanged', handleNotifications);
+
+      log('✅ Verbonden en luisteren naar inkomende data!', 'ok');
+      updateUIState(true);
+
+    } catch (error) {
+      log('Fout bij verbinden: ' + error.message, 'err');
+      updateUIState(false);
+    }
+  });
+
+  function onDisconnected() {
+    log('❌ Verbinding verbroken.', 'err');
+    updateUIState(false);
+  }
+
+  function updateUIState(isConnected) {
+    if (isConnected) {
+      btnConnect.textContent = 'VERBREEK VERBINDING';
+      btnConnect.classList.replace('from-[#145668]', 'from-red-900');
+      btnConnect.classList.replace('to-[#0d3540]', 'to-red-700');
+      statusDot.classList.replace('bg-red-500', 'bg-green-500');
+      statusDot.classList.replace('shadow-[0_0_10px_rgba(239,68,68,0.8)]', 'shadow-[0_0_10px_rgba(34,197,94,0.8)]');
+    } else {
+      btnConnect.textContent = 'VERBIND MET BOARD';
+      btnConnect.classList.replace('from-red-900', 'from-[#145668]');
+      btnConnect.classList.replace('to-red-700', 'to-[#0d3540]');
+      statusDot.classList.replace('bg-green-500', 'bg-red-500');
+      statusDot.classList.replace('shadow-[0_0_10px_rgba(34,197,94,0.8)]', 'shadow-[0_0_10px_rgba(239,68,68,0.8)]');
+      txRxCharacteristic = null;
+    }
+  }
+
+  // --- INKOMENDE DATA (RX) ---
+  function handleNotifications(event) {
+    const value = event.target.value;
+    const bytes = new Uint8Array(value.buffer);
+    
+    // Converteer bytes naar leesbare hex-string (bijv: 53-53-33-CD)
+    const hexString = Array.from(bytes)
+      .map(b => b.toString(16).padStart(2, '0').toUpperCase())
+      .join('-');
+      
+    log('RX: ' + hexString, 'rx');
+  }
+
+  // --- UITGAANDE DATA (TX) ---
+  async function sendBinaryData(hexString) {
+    if (!txRxCharacteristic) {
+      log('Niet verbonden!', 'err');
+      return;
+    }
+
+    // Maak string schoon: verwijder alles behalve hex-karakters
+    const cleanHex = hexString.replace(/[^0-9A-Fa-f]/g, '');
+    
+    if (cleanHex.length === 0 || cleanHex.length % 2 !== 0) {
+      log('Ongeldige hexadecimale invoer (moet een even aantal tekens zijn).', 'err');
+      return;
+    }
+
+    // Zet om naar Uint8Array buffer
+    const bytesArray = new Uint8Array(cleanHex.length / 2);
+    for (let i = 0; i < cleanHex.length; i += 2) {
+      bytesArray[i / 2] = parseInt(cleanHex.substr(i, 2), 16);
+    }
+
+    try {
+      // WRITE_WITHOUT_RESPONSE gebruiken (volgens XML log)
+      await txRxCharacteristic.writeValueWithoutResponse(bytesArray);
+      
+      const formatLog = Array.from(bytesArray).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join('-');
+      log('TX: ' + formatLog, 'tx');
+    } catch (error) {
+      log('Fout bij zenden: ' + error.message, 'err');
+    }
+  }
+
+  // Button Listeners
+  document.getElementById('btnSendHex').addEventListener('click', () => {
+    const hex = document.getElementById('hexInput').value;
+    sendBinaryData(hex);
+  });
+
+  function sendQuickCommand(hex) {
+    log('Probeer commando: ' + hex, '');
+    sendBinaryData(hex);
+  }
+
+</script>
+</body>
+</html>
