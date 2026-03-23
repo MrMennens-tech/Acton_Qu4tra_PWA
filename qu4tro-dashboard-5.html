@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#080f10">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Qu4tro — Mennens.Tech</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ─── Reset ──────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --teal-deep:   #0d3540;
+  --teal-mid:    #145668;
+  --teal-bright: #1b8fa8;
+  --teal-glow:   #23bdd8;
+  --teal-pale:   #a8dde6;
+  --bg:          #080f10;
+  --surf1:       #0c1a1e;
+  --surf2:       #102228;
+  --surf3:       #163038;
+  --border:      #1a3840;
+  --border2:     #1f4d5a;
+  --text:        #e4f2f5;
+  --text-mid:    #7ab5bf;
+  --text-dim:    #3a6870;
+  --live:        #23bdd8;
+  --amber:       #f0a020;
+  --red:         #e84040;
+  --green:       #22c97a;
+  --f-d: 'Barlow Condensed', sans-serif;
+  --f-b: 'Figtree', sans-serif;
+}
+
+html, body { min-height: 100%; background: var(--bg); color: var(--text); font-family: var(--f-b); overflow-x: hidden; }
+
+/* Subtle teal grid texture */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    linear-gradient(rgba(27,143,168,.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(27,143,168,.025) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none; z-index: 0;
+}
+
+.wrap { position: relative; z-index: 1; max-width: 480px; margin: 0 auto; padding: 0 0 48px; }
+
+/* ─── Topbar ──────────────────────────────────────────────────────── */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 20px 0; margin-bottom: 24px;
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand-name {
+  font-family: var(--f-d); font-weight: 700; font-size: 17px;
+  letter-spacing: .06em; line-height: 1; color: var(--text);
+}
+.brand-sub {
+  font-family: var(--f-d); font-weight: 400; font-size: 11px;
+  letter-spacing: .2em; color: var(--teal-bright); margin-top: 3px;
+}
+
+.status-pill {
+  display: flex; align-items: center; gap: 7px;
+  background: var(--surf2); border: 1px solid var(--border);
+  border-radius: 20px; padding: 7px 14px; transition: all .4s;
+}
+.status-pill.on { background: rgba(13,53,64,.5); border-color: var(--teal-mid); }
+.pulse {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--text-dim); transition: all .4s; flex-shrink: 0;
+}
+.status-pill.on .pulse {
+  background: var(--green);
+  box-shadow: 0 0 0 3px rgba(34,201,122,.2), 0 0 10px var(--green);
+  animation: hb 2s ease-in-out infinite;
+}
+@keyframes hb {
+  0%,100% { box-shadow: 0 0 0 3px rgba(34,201,122,.2), 0 0 8px var(--green); }
+  50%      { box-shadow: 0 0 0 5px rgba(34,201,122,.06), 0 0 18px var(--green); }
+}
+.status-label {
+  font-family: var(--f-d); font-size: 12px; font-weight: 700;
+  letter-spacing: .1em; color: var(--text-dim); transition: color .4s;
+}
+.status-pill.on .status-label { color: var(--green); }
+
+/* ─── Connect button ──────────────────────────────────────────────── */
+.connect-area { padding: 0 16px; margin-bottom: 14px; }
+.btn-connect {
+  width: 100%; padding: 17px; border-radius: 14px;
+  background: var(--teal-deep); border: 1.5px solid var(--teal-mid);
+  color: var(--teal-pale); font-family: var(--f-d); font-size: 16px;
+  font-weight: 700; letter-spacing: .16em; cursor: pointer; transition: all .25s;
+  position: relative; overflow: hidden;
+}
+.btn-connect::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(35,189,216,.18) 0%, transparent 60%);
+  opacity: 0; transition: opacity .25s;
+}
+.btn-connect:hover::after { opacity: 1; }
+.btn-connect:disabled { opacity: .45; cursor: not-allowed; }
+
+/* ─── Hero card (speed + battery) ────────────────────────────────── */
+.hero {
+  margin: 0 16px 12px;
+  background: var(--surf1); border: 1px solid var(--border);
+  border-radius: 20px; overflow: hidden; position: relative;
+}
+/* Glow top-right */
+.hero::after {
+  content: ''; position: absolute; top: -60px; right: -60px;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(27,143,168,.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-body { padding: 22px 22px 18px; }
+.hero-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; }
+
+/* Speed */
+.spd-lbl {
+  font-family: var(--f-d); font-size: 10px; font-weight: 700;
+  letter-spacing: .24em; color: var(--teal-bright); margin-bottom: 0;
+}
+.spd-row { display: flex; align-items: baseline; gap: 6px; }
+.spd-val {
+  font-family: var(--f-d); font-size: 78px; font-weight: 800;
+  line-height: .88; color: var(--text); letter-spacing: -.02em; transition: color .3s;
+}
+.spd-unit {
+  font-family: var(--f-d); font-size: 18px; font-weight: 400;
+  color: var(--text-mid); letter-spacing: .1em; align-self: flex-end; padding-bottom: 10px;
+}
+
+/* Battery ring */
+.bat-wrap { display: flex; flex-direction: column; align-items: center; }
+.bat-ring { position: relative; width: 80px; height: 80px; }
+.bat-ring svg { transform: rotate(135deg); }
+.bat-center {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.bat-pct { font-family: var(--f-d); font-size: 22px; font-weight: 700; line-height: 1; color: var(--live); }
+.bat-unit { font-family: var(--f-d); font-size: 9px; color: var(--text-dim); letter-spacing: .12em; margin-top: 1px; }
+
+/* Speed bar */
+.spd-track {
+  height: 4px; background: var(--surf3); border-radius: 2px; overflow: visible;
+  position: relative; margin-bottom: 6px;
+}
+.spd-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--teal-mid), var(--teal-glow));
+  border-radius: 2px; transition: width .4s cubic-bezier(.4,0,.2,1); position: relative;
+}
+.spd-fill.live::after {
+  content: ''; position: absolute; right: -2px; top: -4px;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--teal-glow); box-shadow: 0 0 10px var(--teal-glow);
+}
+.spd-limits {
+  display: flex; justify-content: space-between;
+  font-family: var(--f-d); font-size: 10px; color: var(--text-dim); letter-spacing: .07em;
+}
+
+/* Stats strip */
+.stats-strip {
+  display: grid; grid-template-columns: repeat(4,1fr);
+  border-top: 1px solid var(--border);
+}
+.stat {
+  padding: 14px 0 12px; text-align: center;
+  border-right: 1px solid var(--border);
+}
+.stat:last-child { border-right: none; }
+.stat-lbl {
+  font-family: var(--f-d); font-size: 9px; font-weight: 700;
+  letter-spacing: .15em; color: var(--text-dim); margin-bottom: 3px;
+}
+.stat-val { font-family: var(--f-d); font-size: 18px; font-weight: 700; color: var(--text); line-height: 1; }
+.stat-unit { font-family: var(--f-d); font-size: 9px; color: var(--text-dim); margin-left: 1px; }
+
+/* ─── Section cards ────────────────────────────────────────────────── */
+.section {
+  margin: 0 16px 12px;
+  background: var(--surf1); border: 1px solid var(--border);
+  border-radius: 16px; padding: 18px 20px;
+}
+.sec-lbl {
+  font-family: var(--f-d); font-size: 10px; font-weight: 700;
+  letter-spacing: .24em; color: var(--teal-bright); margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+.sec-lbl::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* Mode selector */
+.modes { display: flex; gap: 8px; margin-bottom: 10px; }
+.mode-btn {
+  flex: 1; border-radius: 12px; border: 1.5px solid var(--border);
+  background: var(--surf2); cursor: pointer; transition: all .22s;
+  overflow: hidden; font-family: inherit; padding: 12px 6px 10px;
+}
+.mode-btn:disabled { opacity: .35; cursor: not-allowed; }
+.mode-icon { font-size: 17px; margin-bottom: 4px; display: block; }
+.mode-name {
+  font-family: var(--f-d); font-size: 13px; font-weight: 700;
+  letter-spacing: .07em; color: var(--text-mid); display: block; transition: color .22s;
+}
+.mode-btn.m0 { border-color: var(--green); background: rgba(34,201,122,.1); }
+.mode-btn.m0 .mode-name { color: var(--green); }
+.mode-btn.m1 { border-color: var(--teal-bright); background: rgba(27,143,168,.12); }
+.mode-btn.m1 .mode-name { color: var(--teal-glow); }
+.mode-btn.m2 { border-color: var(--red); background: rgba(232,64,64,.1); }
+.mode-btn.m2 .mode-name { color: var(--red); }
+.mode-desc { font-size: 12px; color: var(--text-dim); min-height: 16px; }
+
+/* Lights toggle */
+.lights-row { display: flex; justify-content: space-between; align-items: center; }
+.lights-state {
+  font-family: var(--f-d); font-size: 17px; font-weight: 600;
+  letter-spacing: .1em; color: var(--text-dim); transition: color .3s;
+}
+.lights-state.on { color: #f5d060; }
+.toggle {
+  width: 56px; height: 30px; border-radius: 15px; position: relative;
+  background: var(--surf3); border: 1.5px solid var(--border);
+  cursor: pointer; transition: background .3s, border-color .3s;
+}
+.toggle.on { background: rgba(240,160,32,.15); border-color: var(--amber); }
+.toggle:disabled { cursor: not-allowed; opacity: .4; }
+.knob {
+  position: absolute; top: 3px; left: 3px; width: 22px; height: 22px;
+  border-radius: 50%; background: var(--text-dim);
+  transition: left .3s cubic-bezier(.4,0,.2,1), background .3s, box-shadow .3s;
+}
+.toggle.on .knob { left: 28px; background: var(--amber); box-shadow: 0 0 12px rgba(240,160,32,.5); }
+
+/* Disconnect */
+.btn-disc {
+  display: block; width: calc(100% - 32px); margin: 0 16px 12px;
+  padding: 11px; border-radius: 12px; background: transparent;
+  border: 1px solid var(--border); color: var(--text-dim);
+  font-family: var(--f-d); font-size: 13px; font-weight: 700;
+  letter-spacing: .12em; cursor: pointer; transition: border-color .2s, color .2s;
+}
+.btn-disc:hover { border-color: var(--border2); color: var(--text-mid); }
+
+/* Log */
+.log-wrap { margin: 0 16px; background: var(--surf1); border: 1px solid var(--border); border-radius: 16px; padding: 16px 18px; }
+.log-entries { max-height: 110px; overflow-y: auto; }
+.log-e { font-family: var(--f-d); font-size: 11px; font-weight: 400; color: var(--text-dim); line-height: 2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.log-e.ok  { color: rgba(34,201,122,.75); }
+.log-e.err { color: rgba(232,64,64,.75); }
+.log-empty { font-size: 12px; color: var(--text-dim); }
+
+/* Warning */
+.warn { display: none; margin: 0 16px 12px; background: rgba(240,160,32,.07); border: 1px solid rgba(240,160,32,.25); border-radius: 10px; padding: 10px 14px; font-size: 12px; color: var(--amber); line-height: 1.5; }
+
+/* Footer */
+.footer { text-align: center; margin-top: 32px; padding: 0 16px; }
+.ft-brand { display: flex; align-items: center; justify-content: center; margin-bottom: 5px; opacity: .35; }
+.ft-copy { font-size: 11px; color: var(--text-dim); letter-spacing: .04em; }
+
+/* Animate in */
+.fade { animation: fu .4s ease both; }
+@keyframes fu { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="brand">
+      <!-- Real Mennens.Tech logo mark (icon only) -->
+      <svg width="44" height="44" viewBox="0 0 110 110" xmlns="http://www.w3.org/2000/svg" style="filter:brightness(0) invert(1) opacity(.9)">
+        <polygon points="31.9 55.47 31.88 100.22 31.88 103.03 26.01 99.82 26.01 46.8 31.9 46.8 55.66 75.8 78.88 46.8 85.84 46.8 55.76 84.47 31.9 55.47" fill="#012d36" stroke="#012d36" stroke-miterlimit="10" stroke-width=".25"/>
+        <polygon points="59.82 89.34 63.35 93.78 79.92 73.13 79.95 102.72 85.84 99.3 85.84 65.67 100.93 46.8 93.97 46.8 59.82 89.34" fill="#012d36" stroke="#012d36" stroke-miterlimit="10" stroke-width=".25"/>
+        <path d="M31.88,100.22v6c-.87-.41-1.72-.85-2.56-1.31C2.24,90.24-7.8,56.39,6.88,29.32,21.56,2.24,55.41-7.8,82.48,6.88c27.07,14.68,37.12,48.53,22.44,75.6-5.2,9.58-13.09,17.43-22.7,22.58-.75,.4-1.52,.79-2.3,1.16v-6c24.48-13.27,33.56-43.87,20.28-68.35C86.94,7.39,56.34-1.69,31.87,11.58,7.39,24.86-1.69,55.46,11.58,79.93c4.65,8.58,11.7,15.63,20.28,20.28h.02Z" fill="#012d36" stroke="#012d36" stroke-miterlimit="10" stroke-width=".25"/>
+      </svg>
+      <div>
+        <div class="brand-name">MENNENS.TECH</div>
+        <div class="brand-sub">QU4TRO DASHBOARD</div>
+      </div>
+    </div>
+    <div class="status-pill" id="pill">
+      <div class="pulse"></div>
+      <span class="status-label" id="pillLabel">OFFLINE</span>
+    </div>
+  </div>
+
+  <!-- Warn -->
+  <div class="warn" id="warn">⚠ Web Bluetooth vereist Chrome of Edge op Android.</div>
+
+  <!-- Connect -->
+  <div class="connect-area" id="connectArea">
+    <button class="btn-connect" id="btnConnect" onclick="connect()">◎ &nbsp;VERBIND VIA BLUETOOTH</button>
+  </div>
+
+  <!-- Hero -->
+  <div class="hero" id="hero" style="display:none">
+    <div class="hero-body">
+      <div class="hero-top">
+        <div>
+          <div class="spd-lbl">SNELHEID</div>
+          <div class="spd-row">
+            <div class="spd-val" id="spdVal">0.0</div>
+            <div class="spd-unit">KM/H</div>
+          </div>
+        </div>
+        <div class="bat-wrap">
+          <div class="bat-ring">
+            <svg width="80" height="80" viewBox="0 0 80 80">
+              <circle cx="40" cy="40" r="32" fill="none" stroke="#1a3840" stroke-width="7" stroke-dasharray="150.8 201.1" stroke-linecap="round"/>
+              <circle id="batArc" cx="40" cy="40" r="32" fill="none" stroke="#1b8fa8" stroke-width="7" stroke-dasharray="0 201.1" stroke-linecap="round" style="transition:stroke-dasharray .8s ease,stroke .4s"/>
+            </svg>
+            <div class="bat-center">
+              <div class="bat-pct" id="batPct">–</div>
+              <div class="bat-unit">ACCU</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="spd-track"><div class="spd-fill" id="spdBar"></div></div>
+      <div class="spd-limits"><span>0</span><span id="spdMax">25 KM/H MAX</span></div>
+    </div>
+    <div class="stats-strip">
+      <div class="stat"><div class="stat-lbl">VOLT</div><span class="stat-val" id="sVolt">–</span><span class="stat-unit">V</span></div>
+      <div class="stat"><div class="stat-lbl">TEMP</div><span class="stat-val" id="sTemp">–</span><span class="stat-unit">°C</span></div>
+      <div class="stat"><div class="stat-lbl">STROOM</div><span class="stat-val" id="sDrain">–</span><span class="stat-unit">A</span></div>
+      <div class="stat"><div class="stat-lbl">BEREIK</div><span class="stat-val" id="sRange">–</span><span class="stat-unit">km</span></div>
+    </div>
+  </div>
+
+  <!-- Mode -->
+  <div class="section" id="secMode" style="display:none">
+    <div class="sec-lbl">RIJMODUS</div>
+    <div class="modes">
+      <button class="mode-btn" id="mb0" onclick="setMode(0)">
+        <span class="mode-icon">🟢</span><span class="mode-name">BEGINNER</span>
+      </button>
+      <button class="mode-btn" id="mb1" onclick="setMode(1)">
+        <span class="mode-icon">🔵</span><span class="mode-name">NORMAL</span>
+      </button>
+      <button class="mode-btn" id="mb2" onclick="setMode(2)">
+        <span class="mode-icon">🔴</span><span class="mode-name">PRO</span>
+      </button>
+    </div>
+    <div class="mode-desc" id="mDesc">–</div>
+  </div>
+
+  <!-- Lights -->
+  <div class="section" id="secLights" style="display:none">
+    <div class="sec-lbl">VERLICHTING</div>
+    <div class="lights-row">
+      <div class="lights-state" id="lState">UIT</div>
+      <button class="toggle" id="lToggle" onclick="toggleLights()"><div class="knob"></div></button>
+    </div>
+  </div>
+
+  <!-- Disconnect -->
+  <button class="btn-disc" id="btnDisc" onclick="disconnect()" style="display:none">VERBINDING VERBREKEN</button>
+
+  <!-- Log -->
+  <div class="log-wrap">
+    <div class="sec-lbl">LOG</div>
+    <div class="log-entries" id="logEl"><div class="log-empty">Wachten op verbinding...</div></div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="ft-brand">
+      <!-- Full Mennens.Tech logo -->
+      <svg viewBox="0 0 371.86 140.34" xmlns="http://www.w3.org/2000/svg" style="height:28px;width:auto;filter:brightness(0) invert(1)">
+        <polygon points="31.9 55.47 31.88 100.22 31.88 103.03 26.01 99.82 26.01 46.8 31.9 46.8 55.66 75.8 78.88 46.8 85.84 46.8 55.76 84.47 31.9 55.47" fill="#012d36" stroke="#012d36" stroke-width=".25"/>
+        <polygon points="59.82 89.34 63.35 93.78 79.92 73.13 79.95 102.72 85.84 99.3 85.84 65.67 100.93 46.8 93.97 46.8 59.82 89.34" fill="#012d36" stroke="#012d36" stroke-width=".25"/>
+        <path d="M31.88,100.22v6c-.87-.41-1.72-.85-2.56-1.31C2.24,90.24-7.8,56.39,6.88,29.32,21.56,2.24,55.41-7.8,82.48,6.88c27.07,14.68,37.12,48.53,22.44,75.6-5.2,9.58-13.09,17.43-22.7,22.58-.75,.4-1.52,.79-2.3,1.16v-6c24.48-13.27,33.56-43.87,20.28-68.35C86.94,7.39,56.34-1.69,31.87,11.58,7.39,24.86-1.69,55.46,11.58,79.93c4.65,8.58,11.7,15.63,20.28,20.28h.02Z" fill="#012d36" stroke="#012d36" stroke-width=".25"/>
+        <polygon fill="#012d36" points="3.59 118.78 3.59 139.22 1.12 139.22 1.12 114.98 3.59 114.98 13.5 127.71 23.19 114.98 26.1 114.98 13.55 131.51 3.59 118.78"/>
+        <path fill="#012d36" d="M4.59,140.22H.12v-26.24h3.95l9.42,12.09,9.2-12.09h5.42l-14.56,19.17-9-11.47,.03,18.54Zm-2.46-2h.46v-22.24h-.46v22.24Zm.54-22.24l10.87,13.89,10.55-13.89h-.4l-10.17,13.37-10.42-13.37h-.43Z"/>
+        <polygon fill="#012d36" stroke="#012d36" stroke-width="2" stroke-miterlimit="10" points="24.69 126.09 24.69 139.22 27.01 139.22 27.01 123.2 24.69 126.09"/>
+        <polygon fill="#012d36" stroke="#012d36" stroke-width="2" stroke-miterlimit="10" points="43.26 136.78 43.26 117.42 60.41 117.42 60.41 114.98 40.76 114.98 40.76 139.22 60.59 139.22 60.59 136.78 43.26 136.78"/>
+        <rect fill="#012d36" stroke="#012d36" stroke-width="2" stroke-miterlimit="10" x="48.99" y="125.64" width="8.75" height="2.35"/>
+        <polygon fill="#012d36" stroke="#012d36" stroke-width="2" stroke-miterlimit="10" points="73.76 126.09 73.76 139.22 71.44 139.22 71.44 123.2 73.76 126.09"/>
+        <polygon fill="#012d36" stroke="#012d36" stroke-width="2" stroke-miterlimit="10" points="92.06 135.78 75.56 115.22 72.59 115.22 91.84 139.22 94.47 139.22 94.47 115.22 92.06 115.22 92.06 135.78"/>
+        <polygon fill="#012d36" stroke="#012d36" stroke-width="2" stroke-miterlimit="10" points="110.44 126.09 110.44 139.22 108.12 139.22 108.12 123.2 110.44 126.09"/>
+        <polygon fill="#012d36" stroke="#012d36" stroke-width="2" stroke-miterlimit="10" points="128.75 135.78 112.24 115.22 109.27 115.22 128.53 139.22 131.15 139.22 131.15 115.22 128.75 115.22 128.75 135.78"/>
+        <polygon fill="#012d36" stroke="#012d36" stroke-width="2" stroke-miterlimit="10" points="148.01 136.9 148.01 117.54 165.17 117.54 165.17 115.1 145.51 115.1 145.51 139.34 165.36 139.34 165.36 136.9 148.01 136.9"/>
+        <rect fill="#012d36" stroke="#012d36" stroke-width="2" stroke-miterlimit="10" x="153.7" y="125.76" width="8.8" height="2.35"/>
+        <polygon fill="#012d36" stroke="#012d36" stroke-width="2" stroke-miterlimit="10" points="178.28 126.09 178.28 139.22 175.95 139.22 175.95 123.2 178.28 126.09"/>
+        <polygon fill="#012d36" stroke="#012d36" stroke-width="2" stroke-miterlimit="10" points="196.59 135.78 180.09 115.22 177.12 115.22 196.37 139.22 198.98 139.22 198.98 115.22 196.59 115.22 196.59 135.78"/>
+        <path fill="#012d36" stroke="#012d36" stroke-width="2" stroke-miterlimit="10" d="M231.03,120.93h2.52c-.14-3.31-2.89-5.9-6.2-5.83h-8.35c-1.67-.05-3.28,.63-4.41,1.87-1.22,1.17-1.88,2.82-1.79,4.51-.07,1.7,.58,3.35,1.79,4.54,1.12,1.25,2.74,1.93,4.41,1.85h8.22c1.18-.04,2.33,.44,3.14,1.3,.69,.87,1.09,1.94,1.13,3.05-.01,1.14-.43,2.24-1.17,3.1-.79,.86-1.93,1.32-3.1,1.25h-8.22c-1.15,.04-2.27-.31-3.19-1-.72-.77-1.17-1.75-1.28-2.8h-2.33c.03,1.78,.77,3.48,2.07,4.7,1.2,1.03,2.74,1.58,4.32,1.55h8.86c3.65-.03,6.59-3.01,6.56-6.66,0-.03,0-.07,0-.1,.1-3.61-2.74-6.61-6.35-6.71-.07,0-.14,0-.21,0h-8.18c-1.13,.14-2.27-.26-3.05-1.1-.62-.87-.93-1.93-.89-3-.13-2.05,1.44-3.81,3.49-3.94,.15,0,.3,0,.45,0,3-.05,7.15,0,7.9,0,1.07-.17,2.16,.16,2.94,.91,.62,.54,.96,1.33,.92,2.15v.36Z"/>
+        <rect fill="#012d36" stroke="#012d36" stroke-width="2" stroke-miterlimit="10" x="241.48" y="134.9" width="4.1" height="4.1"/>
+        <rect fill="#012d36" stroke="#012d36" stroke-width="2" stroke-miterlimit="10" x="251.83" y="115.22" width="22.65" height="2.4"/>
+        <rect fill="#012d36" stroke="#012d36" stroke-width="2" stroke-miterlimit="10" x="261.87" y="123.2" width="2.54" height="15.79"/>
+        <polygon fill="#012d36" stroke="#012d36" stroke-width="2" stroke-miterlimit="10" points="285.43 136.72 285.43 117.37 302.59 117.37 302.59 114.92 282.93 114.92 282.93 139.16 302.77 139.16 302.77 136.72 285.43 136.72"/>
+        <rect fill="#012d36" stroke="#012d36" stroke-width="2" stroke-miterlimit="10" x="291.11" y="125.59" width="8.8" height="2.35"/>
+        <path fill="#012d36" stroke="#012d36" stroke-width="2" stroke-miterlimit="10" d="M333.96,115.22h-18.31c-.66,.05-1.29,.31-1.79,.74-.43,.51-.69,1.14-.74,1.81v18.8c-.02,.68,.25,1.34,.74,1.81,.47,.49,1.12,.76,1.79,.74h18.95v-2.41h-18.95v-19.08h18.31v-2.41Z"/>
+        <rect fill="#012d36" stroke="#012d36" stroke-width="2" stroke-miterlimit="10" x="347.11" y="115.22" width="2.56" height="23.95"/>
+        <polygon fill="#012d36" stroke="#012d36" stroke-width="2" stroke-miterlimit="10" points="355.37 125.71 368.56 125.71 368.56 115.22 370.86 115.22 370.86 139.16 368.56 139.16 368.56 128.07 355.37 128.07 355.37 125.71"/>
+      </svg>
+    </div>
+    <div class="ft-copy">mennens.tech · Qu4tro BLE Dashboard · Not yet tested on live hardware</div>
+  </div>
+
+</div>
+
+<script>
+const SVC  = '0000ffe0-0000-1000-8000-00805f9b34fb';
+const CHAR = '0000ffe1-0000-1000-8000-00805f9b34fb';
+const enc  = new TextEncoder(), dec = new TextDecoder();
+
+const MODES    = ['BEGINNER','NORMAL','PERFORMANCE'];
+const DESCS    = ['Max ~15 km/h · Zachte remmen · Veilig voor beginners','Max ~25 km/h · Standaard rijgedrag','Volledig vermogen · Scherpe respons'];
+const MAX_V    = [15, 25, 44];
+const MODE_CLS = ['m0','m1','m2'];
+
+let device = null, char = null, hbTimer = null;
+let curMode = 1, lightsOn = false;
+let seqNum = 0;  // outboundCount - incrementing sequence number
+
+// ── Protocol helpers ──────────────────────────────────────────────
+// Gemini research: comma delimiter, \r\n terminator, integer indices
+// Format: AS,<seq>,<key>,<value>,AE\r\n
+// Or for simple cmds: AS,<seq>,<key>,AE\r\n
+
+const DELIM = ',';
+const TERM  = '\r\n';
+const MAX_MTU = 19; // HM-10 CC2541 = 20 bytes max, keep 1 byte margin
+
+function buildPkt(key, value) {
+  seqNum++;
+  const parts = value !== undefined
+    ? ['AS', seqNum, key, value, 'AE'].join(DELIM)
+    : ['AS', seqNum, key, 'AE'].join(DELIM);
+  return parts + TERM;
+}
+
+// Mode integer indices (0=BEGINNER, 1=NORMAL, 2=PERFORMANCE)
+function buildModePkt(modeIdx) { return buildPkt('M', modeIdx); }
+function buildLightPkt(on)     { return buildPkt('B7', on ? 1 : 0); }
+function buildMasterPkt()      { return buildPkt('MASTER'); }
+function buildHeartbeatPkt()   { return buildPkt('heartbeat'); }
+function buildQueryPkt()       { return buildPkt('M', 'QUERY'); }
+
+// Legacy pkt() for compatibility
+function pkt(fields) {
+  // Use new format but keep old call signature
+  seqNum++;
+  const inner = fields.map(({k,v})=>k+DELIM+String(v)).join(DELIM);
+  return 'AS'+DELIM+seqNum+DELIM+inner+DELIM+'AE'+TERM;
+}
+
+// Parse incoming telemetry - handles both comma and pipe delimiters
+function parsePkt(s) {
+  // Strip terminator
+  s = s.replace(/[\r\n]/g, '').trim();
+  // Try comma delimiter first (new format)
+  let p = s.split(',').map(x=>x.trim());
+  if (p[0]!=='AS') p = s.split(' | ').map(x=>x.trim());
+  if (p[0]!=='AS'||p[p.length-1]!=='AE') return null;
+  const r={};
+  // Skip AS and possible sequence number
+  let start = 1;
+  if (!isNaN(parseInt(p[1]))) start = 2;  // skip seq num
+  for(let i=start;i<p.length-1;i+=2) {
+    if(p[i+1]!==undefined) r[p[i]]=p[i+1];
+  }
+  return r;
+}
+
+function log(msg, cls='') {
+  const el = document.getElementById('logEl');
+  const empty = el.querySelector('.log-empty');
+  if (empty) empty.remove();
+  const d = document.createElement('div');
+  d.className = 'log-e' + (cls?' '+cls:'');
+  d.textContent = new Date().toLocaleTimeString('nl-NL') + '  ' + msg;
+  el.prepend(d);
+  while(el.children.length > 25) el.lastChild.remove();
+}
+
+function showDash(yes) {
+  document.getElementById('pill').classList.toggle('on', yes);
+  document.getElementById('pillLabel').textContent = yes ? 'VERBONDEN' : 'OFFLINE';
+  document.getElementById('connectArea').style.display = yes ? 'none' : 'block';
+  const show = yes ? '' : 'none';
+  ['hero','secMode','secLights'].forEach(id => {
+    const el = document.getElementById(id);
+    el.style.display = yes ? 'block' : 'none';
+    if (yes) el.classList.add('fade');
+  });
+  document.getElementById('btnDisc').style.display = yes ? 'block' : 'none';
+}
+
+function setBattery(pct) {
+  const arc = document.getElementById('batArc');
+  const txt = document.getElementById('batPct');
+  const fill = (pct/100)*150.8;
+  const col = pct>50?'#1b8fa8':pct>20?'#f0a020':'#e84040';
+  arc.setAttribute('stroke-dasharray',`${fill} 201.1`);
+  arc.setAttribute('stroke',col);
+  txt.style.color=col;
+  txt.textContent=pct;
+}
+
+function setSpeed(spd, mode) {
+  const max=MAX_V[mode], pct=Math.min(spd/max*100,100);
+  document.getElementById('spdVal').textContent=spd.toFixed(1);
+  const bar=document.getElementById('spdBar');
+  bar.style.width=pct+'%';
+  bar.classList.toggle('live', spd>0.5);
+  document.getElementById('spdMax').textContent=max+' KM/H MAX';
+}
+
+function setMode(idx) {
+  curMode=idx;
+  for(let i=0;i<3;i++) {
+    const b=document.getElementById('mb'+i);
+    b.className='mode-btn'+(i===idx?' '+MODE_CLS[i]:'');
+  }
+  document.getElementById('mDesc').textContent=DESCS[idx];
+  setSpeed(parseFloat(document.getElementById('spdVal').textContent)||0, idx);
+  sendCmd(buildModePkt(idx));  // Send integer index (0/1/2), not string
+}
+
+function toggleLights() {
+  lightsOn=!lightsOn;
+  const t=document.getElementById('lToggle');
+  const s=document.getElementById('lState');
+  t.classList.toggle('on',lightsOn);
+  s.className='lights-state'+(lightsOn?' on':'');
+  s.textContent=lightsOn?'AAN  ✦':'UIT';
+  sendCmd(buildLightPkt(lightsOn));
+}
+
+async function sendCmd(packet) {
+  if (!char) return;
+  try {
+    const bytes = enc.encode(packet);
+    // MTU fragmentation: HM-10 max 20 bytes per write
+    for (let offset = 0; offset < bytes.length; offset += MAX_MTU) {
+      const chunk = bytes.slice(offset, offset + MAX_MTU);
+      if (char.properties.writeWithoutResponse) {
+        await char.writeValueWithoutResponse(chunk);
+      } else {
+        await char.writeValue(chunk);
+      }
+      // 30ms delay between chunks to prevent buffer overrun
+      if (offset + MAX_MTU < bytes.length) {
+        await new Promise(r => setTimeout(r, 30));
+      }
+    }
+    log('TX: ' + packet.replace(/[\r\n]/g,'↵'), 'ok');
+  }
+  catch(e) { log('TX fout: '+e.message,'err'); }
+}
+
+function onNotify(e) {
+  const f = parsePkt(dec.decode(e.target.value));
+  if (!f) return;
+  if (f.B3) setBattery(parseInt(f.B3));
+  if (f.V)  document.getElementById('sVolt').textContent=(parseInt(f.V)/1000).toFixed(1);
+  if (f.B1) document.getElementById('sTemp').textContent=parseInt(f.B1);
+  if (f.B4) document.getElementById('sDrain').textContent=(parseInt(f.B4)/1000).toFixed(1);
+  if (f.R8) document.getElementById('sRange').textContent=(parseInt(f.R8)/1000).toFixed(1);
+  if (f.R6) setSpeed(parseInt(f.R6)/26.6, curMode);
+  if (f.B6) {
+    const m={'0':0,'1':1,'2':2,'BEGINNER':0,'NORMAL':1,'PERFORMANCE':2}[f.B6];
+    if (m!==undefined) { curMode=m; setMode(m); }
+  }
+  if (f.B7) {
+    lightsOn=parseInt(f.B7)>0;
+    document.getElementById('lToggle').classList.toggle('on',lightsOn);
+    const s=document.getElementById('lState');
+    s.className='lights-state'+(lightsOn?' on':'');
+    s.textContent=lightsOn?'AAN  ✦':'UIT';
+  }
+}
+
+async function connect() {
+  if (!navigator.bluetooth) {
+    document.getElementById('warn').style.display='block';
+    log('Web Bluetooth niet beschikbaar','err'); return;
+  }
+  const btn=document.getElementById('btnConnect');
+  btn.textContent='◌  VERBINDEN...'; btn.disabled=true;
+  log('Scannen... selecteer BQ... in de lijst');
+  try {
+    device = await navigator.bluetooth.requestDevice({
+      acceptAllDevices: true,
+      optionalServices: [SVC]
+    });
+    device.addEventListener('gattserverdisconnected', ()=>{
+      clearInterval(hbTimer); showDash(false);
+      log('Verbinding verbroken','err'); char=null;
+      btn.textContent='◎ \u00a0VERBIND VIA BLUETOOTH'; btn.disabled=false;
+    });
+    const srv = await device.gatt.connect();
+    const svc = await srv.getPrimaryService(SVC);
+    char = await svc.getCharacteristic(CHAR);
+    await char.startNotifications();
+    char.addEventListener('characteristicvaluechanged', onNotify);
+    showDash(true); setBattery(0); setMode(1);
+    log('Verbonden met '+device.name,'ok');
+    // Step 1: Send MASTER handshake to claim BLE interface
+    log('Handshake: MASTER assertion...','ok');
+    await sendCmd(buildMasterPkt());
+    // Step 2: Wait 500ms for MCU state machine to unlock
+    await new Promise(r => setTimeout(r, 500));
+    // Step 3: Send initial QUERY
+    await sendCmd(buildQueryPkt());
+    // Step 4: Start heartbeat (1500ms interval) + periodic telemetry
+    hbTimer = setInterval(async () => {
+      await sendCmd(buildHeartbeatPkt());
+      await new Promise(r => setTimeout(r, 100));
+      await sendCmd(buildQueryPkt());
+    }, 1500);
+  } catch(e) {
+    log('Mislukt: '+e.message,'err');
+    btn.textContent='◎ \u00a0VERBIND VIA BLUETOOTH'; btn.disabled=false;
+  }
+}
+
+async function disconnect() {
+  clearInterval(hbTimer);
+  if (device?.gatt?.connected) device.gatt.disconnect();
+  char=null; showDash(false); log('Verbroken');
+}
+
+if (!('bluetooth' in navigator)) document.getElementById('warn').style.display='block';
+</script>
+</body>
+</html>
